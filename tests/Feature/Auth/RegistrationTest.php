@@ -27,5 +27,9 @@ class RegistrationTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+
+        $user = \App\Models\User::where('email', 'test@example.com')->firstOrFail();
+        $this->assertSame('guru', $user->role);
+        $this->assertTrue($user->trial_ends_at->isFuture());
     }
 }

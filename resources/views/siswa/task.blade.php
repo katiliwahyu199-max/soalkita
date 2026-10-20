@@ -109,6 +109,81 @@
                         @elseif ($soal->tipe_soal_di_tugas == 'uraian')
                             <textarea name="jawaban" id="uraian_jawaban" rows="6" placeholder="Tulis jawaban Anda di sini..."
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">{{ $jawabanSiswa }}</textarea>
+                        @elseif ($soal->tipe_soal_di_tugas == 'menjodohkan')
+                            @php
+                                $matchingPairs = is_array($jawabanSiswa) ? $jawabanSiswa : [];
+                                $matchingOptions = json_decode($soal->kunci_jawaban ?? '{}', true);
+                                $matchingLeft = is_array($matchingOptions) ? array_keys($matchingOptions) : [];
+                                $matchingRight = is_array($matchingOptions) ? array_values(array_unique($matchingOptions)) : [];
+                                $savedMatchingRight = [];
+                                foreach ($matchingLeft as $leftKey) {
+                                    $savedValue = $matchingPairs[$leftKey] ?? null;
+                                    if ($savedValue !== null && in_array($savedValue, $matchingRight, true)) {
+                                        $savedMatchingRight[] = $savedValue;
+                                    }
+                                }
+                                $matchingRightOrder = array_values(array_unique(array_merge($savedMatchingRight, $matchingRight)));
+                            @endphp
+                            <div x-data='{
+                                leftItems: @json($matchingLeft),
+                                rightItems: @json($matchingRightOrder).map((value, id) => ({ id, value })),
+                                move(index, step) {
+                                    const target = index + step;
+                                    if (target < 0 || target >= this.rightItems.length || index === target) return;
+
+                                    const positions = {};
+                                    this.$root.querySelectorAll("[data-matching-card]").forEach((card) => {
+                                        positions[card.dataset.matchingCard] = card.getBoundingClientRect().top;
+                                    });
+
+                                    [this.rightItems[index], this.rightItems[target]] = [this.rightItems[target], this.rightItems[index]];
+
+                                    this.$nextTick(() => {
+                                        this.$root.querySelectorAll("[data-matching-card]").forEach((card) => {
+                                            const previousTop = positions[card.dataset.matchingCard];
+                                            if (previousTop === undefined) return;
+
+                                            const offset = previousTop - card.getBoundingClientRect().top;
+                                            card.style.transition = "none";
+                                            card.style.transform = `translateY(${offset}px)`;
+
+                                            requestAnimationFrame(() => {
+                                                card.style.transition = "transform 350ms cubic-bezier(.22, .61, .36, 1)";
+                                                card.style.transform = "translateY(0)";
+                                            });
+                                        });
+                                    });
+                                }
+                            }' class="space-y-4">
+                                <p class="text-sm text-gray-600">Sejajarkan setiap jawaban di sebelah item yang sesuai. Gunakan tombol naik/turun pada kolom kanan untuk mengatur pasangan.</p>
+
+                                <div class="overflow-x-auto pb-2">
+                                    <div class="grid min-w-[640px] grid-cols-2 gap-5">
+                                        <div class="space-y-3">
+                                            <div class="px-1 text-xs font-bold uppercase tracking-wide text-gray-500">Item kiri</div>
+                                            <template x-for="leftKey in leftItems" :key="leftKey">
+                                                <div class="flex h-20 items-center rounded-xl border-2 border-indigo-200 bg-white px-4 py-3 shadow-sm">
+                                                    <span class="text-base font-semibold text-gray-800" x-text="leftKey"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        <div class="space-y-3">
+                                            <div class="px-1 text-xs font-bold uppercase tracking-wide text-gray-500">Pasangan kanan</div>
+                                            <template x-for="(item, index) in rightItems" :key="item.id">
+                                                <div data-matching-card x-bind:data-matching-card="item.id" class="flex h-20 items-center gap-2 rounded-xl border-2 border-indigo-300 bg-indigo-50 px-3 py-3 shadow-sm will-change-transform">
+                                                    <div class="flex h-11 flex-1 items-center rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm font-medium text-indigo-700" x-text="item.value"></div>
+                                                    <div class="flex flex-col gap-1">
+                                                        <button type="button" @click="move(index, -1)" class="rounded border border-gray-300 bg-white px-2 py-1 text-xs font-bold text-gray-700 hover:bg-gray-100" aria-label="Naik">&#9650;</button>
+                                                        <button type="button" @click="move(index, 1)" class="rounded border border-gray-300 bg-white px-2 py-1 text-xs font-bold text-gray-700 hover:bg-gray-100" aria-label="Turun">&#9660;</button>
+                                                    </div>
+                                                    <input type="hidden" :name="`jawaban[${leftItems[index]}]`" :value="item.value">
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         @else
                             <p class="text-red-500">Tipe soal tidak dikenali.</p>
                         @endif
@@ -138,6 +213,121 @@
         </div>
     </div>
 
+    <div id="task-focus-warning" class="fixed inset-x-3 top-3 z-[60] hidden rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 shadow-xl sm:left-auto sm:right-6 sm:max-w-md" role="alert">
+        <div class="flex items-start gap-3">
+            <span class="text-lg" aria-hidden="true">!</span>
+            <p id="task-focus-warning-text" class="flex-1"></p>
+            <button type="button" id="dismiss-focus-warning" class="text-amber-700 hover:text-amber-950" aria-label="Tutup peringatan">&times;</button>
+        </div>
+    </div>
+
+    <script>
+        window.taskPageAllowExit = false;
+
+        (() => {
+            const warning = document.getElementById('task-focus-warning');
+            const warningText = document.getElementById('task-focus-warning-text');
+            const dismissWarning = document.getElementById('dismiss-focus-warning');
+            let wasHidden = false;
+            let warningTimeout;
+            let titleInterval;
+            const originalTitle = document.title;
+            const alarmAudio = new Audio(@json(asset('audio/alarm.mpeg')));
+            alarmAudio.loop = true;
+            alarmAudio.volume = 0.8;
+
+            const startAlarm = () => {
+                if (!titleInterval) {
+                    let titleAlertVisible = false;
+                    titleInterval = setInterval(() => {
+                        titleAlertVisible = !titleAlertVisible;
+                        document.title = titleAlertVisible ? '!! Kembali ke tugas' : originalTitle;
+                    }, 800);
+                }
+
+                if (alarmAudio.paused) {
+                    alarmAudio.currentTime = 0;
+                    alarmAudio.play().catch(() => {
+                        warningText.textContent = 'Alarm tidak dapat diputar. Klik halaman terlebih dahulu untuk mengizinkan suara.';
+                    });
+                }
+            };
+
+            const stopAlarm = () => {
+                clearInterval(titleInterval);
+                titleInterval = null;
+                document.title = originalTitle;
+                alarmAudio.pause();
+                alarmAudio.currentTime = 0;
+            };
+
+            const showWarning = (message) => {
+                warningText.textContent = message;
+                warning.classList.remove('hidden');
+                clearTimeout(warningTimeout);
+                warningTimeout = setTimeout(() => warning.classList.add('hidden'), 6000);
+            };
+
+            dismissWarning.addEventListener('click', () => warning.classList.add('hidden'));
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    if (window.taskPageAllowExit) return;
+                    wasHidden = true;
+                    fetch(@json(route('siswa.focusLoss', $terbitanTugas->id)), {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': @json(csrf_token()),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ reason: 'visibilitychange' }),
+                        keepalive: true
+                    }).catch(() => {});
+                    startAlarm();
+                    return;
+                }
+
+                stopAlarm();
+                if (wasHidden && !window.taskPageAllowExit) {
+                    wasHidden = false;
+                    showWarning('Anda kembali ke halaman tugas. Jangan membuka tab atau aplikasi lain selama mengerjakan.');
+                }
+            });
+
+            window.addEventListener('blur', () => {
+                if (!window.taskPageAllowExit) startAlarm();
+            });
+
+            window.addEventListener('focus', () => {
+                if (document.visibilityState === 'visible') stopAlarm();
+            });
+
+            window.addEventListener('beforeunload', (event) => {
+                if (window.taskPageAllowExit) return;
+                event.preventDefault();
+                event.returnValue = '';
+            });
+
+            history.pushState({ taskPage: true }, '', window.location.href);
+            window.addEventListener('popstate', () => {
+                if (window.taskPageAllowExit || window.confirm('Anda akan meninggalkan halaman tugas. Jawaban yang belum tersimpan dapat hilang. Lanjutkan?')) {
+                    window.taskPageAllowExit = true;
+                    history.back();
+                    return;
+                }
+
+                history.pushState({ taskPage: true }, '', window.location.href);
+            });
+
+            document.querySelectorAll('a[href]').forEach((link) => {
+                link.addEventListener('click', () => {
+                    window.taskPageAllowExit = true;
+                });
+            });
+        })();
+    </script>
+
 
 
     <script>
@@ -160,6 +350,14 @@
                 if (textarea && textarea.value.trim() !== '') {
                     isAnswered = true;
                 }
+            } else if (soalType === 'menjodohkan') {
+                const hiddenInputs = form.querySelectorAll('input[name^="jawaban["]');
+                for (const hiddenInput of hiddenInputs) {
+                    if (hiddenInput.value && hiddenInput.value.trim() !== '') {
+                        isAnswered = true;
+                        break;
+                    }
+                }
             }
 
             const action = form.elements['action'].value;
@@ -168,6 +366,10 @@
             if (!isAnswered && (action === 'next' || action === 'finish')) {
                 event.preventDefault();
                 alert("Anda harus memilih/mengisi jawaban sebelum Simpan & Lanjut atau Selesai.");
+            }
+
+            if (!event.defaultPrevented) {
+                window.taskPageAllowExit = true;
             }
         });
 

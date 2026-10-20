@@ -30,19 +30,19 @@
             <div class="flex-1 flex flex-col overflow-hidden">
 
                 <div
-                    class="flex justify-between items-center p-4 bg-white border-b border-slate-200 shadow-sm sm:hidden">
-                    <div class="shrink-0 flex items-center">
+                    class="flex justify-between items-center gap-3 p-3 sm:p-4 bg-white border-b border-slate-200 shadow-sm sm:hidden">
+                    <div class="min-w-0 flex items-center">
                         <a href="{{ route('dashboard') }}"
-                            class="flex items-center space-x-2 text-xl font-bold text-blue-600 hover:text-blue-800">
+                            class="flex min-w-0 items-center gap-2 text-base sm:text-xl font-bold text-blue-600 hover:text-blue-800 transition-colors">
                             <!-- Logo -->
                             <img src="{{ asset('img/tutwuri.png') }}" alt="Logo Tutwuri" class="h-9 w-auto">
                             <!-- Teks -->
-                            <span>Gudang Soal SDN 09 Kota Barat</span>
+                            <span class="truncate">SoalKita</span>
                         </a>
 
                     </div>
                     <button @click="mobileSidebarOpen = !mobileSidebarOpen"
-                        class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none">
+                        class="inline-flex shrink-0 items-center justify-center p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors">
                         <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 6h16M4 12h16M4 18h16" />
@@ -52,9 +52,9 @@
 
                 @isset($header)
                     <header class="bg-blue-800 shadow-sm border-b border-slate-200 hidden sm:block text-white">
-                        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                        <div class="max-w-7xl mx-auto py-3 sm:py-4 px-4 sm:px-6 lg:px-8 flex justify-between items-center gap-4">
 
-                            <div class="flex-1 min-w-0">
+                            <div class="min-w-0 flex-1 overflow-hidden">
                                 {{ $header }}
                             </div>
 
@@ -103,7 +103,7 @@
                     </header>
                 @endisset
 
-                <main class="flex-1 overflow-y-auto p-4 sm:p-2 lg:p-8 bg-slate-50">
+                <main class="app-scrollbar flex-1 overflow-y-auto p-3 sm:p-5 lg:p-8 bg-slate-50">
                     {{ $slot }}
                 </main>
             </div>

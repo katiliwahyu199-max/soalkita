@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'trial_ends_at',
     ];
 
     /**
@@ -43,7 +44,19 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'trial_ends_at' => 'datetime',
+            'subscription_ends_at' => 'datetime',
         ];
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function hasActiveSubscription(): bool
+    {
+        return $this->trial_ends_at?->isFuture() || $this->subscription_ends_at?->isFuture() || false;
     }
 
     public function terbitanTugas()
@@ -55,5 +68,10 @@ class User extends Authenticatable
     public function kelas()
     {
         return $this->hasMany(Kelas::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(SubscriptionPayment::class);
     }
 }

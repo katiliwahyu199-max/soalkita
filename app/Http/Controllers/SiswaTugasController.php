@@ -179,6 +179,28 @@ class SiswaTugasController extends Controller
         }
     }
 
+    public function reportFocusLoss(Request $request, TerbitanTugas $terbitanTugas)
+    {
+        $session = $request->session()->get('task_session');
+
+        if (!$session || $session['terbitan_id'] != $terbitanTugas->id || $terbitanTugas->status !== 'aktif') {
+            return response()->json(['message' => 'Sesi tugas tidak valid.'], 403);
+        }
+
+        $jawabanSiswa = JawabanSiswa::where('id', $session['jawaban_siswa_id'] ?? 0)
+            ->where('terbitan_tugas_id', $terbitanTugas->id)
+            ->first();
+
+        if (!$jawabanSiswa) {
+            return response()->json(['message' => 'Data pengerjaan tidak ditemukan.'], 404);
+        }
+
+        $jawabanSiswa->increment('focus_loss_count');
+        $jawabanSiswa->forceFill(['last_focus_loss_at' => now()])->save();
+
+        return response()->json(['ok' => true]);
+    }
+
     public function confirmTask(Request $request, TerbitanTugas $terbitanTugas)
     {
         $session = $request->session()->get('task_session');

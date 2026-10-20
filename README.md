@@ -42,6 +42,20 @@ We would like to extend our thanks to the following sponsors for funding Laravel
 - **[Redberry](https://redberry.international/laravel-development)**
 - **[Active Logic](https://activelogic.com)**
 
+## Langganan Guru
+
+Setelah menjalankan migrasi, isi kredensial admin di `.env`:
+
+```bash
+ADMIN_NAME="Administrator"
+ADMIN_EMAIL=admin@sekolah.id
+ADMIN_PASSWORD="gunakan-password-kuat-dan-unik"
+```
+
+Jalankan seeder admin secara terpisah dengan `php artisan db:seed --class=AdminUserSeeder`. Jika kredensial belum diatur di `.env`, seeder akan meminta nama, email, dan password secara interaktif; input password disembunyikan. Seeder membuat akun baru atau mempromosikan akun dengan email tersebut, dan menolak membuat admin kedua. Guru yang mendaftar mendapat uji coba gratis 7 hari. Harga awal paket bulanan adalah Rp75.000 dan admin dapat mengubah harga serta petunjuk transfer dari menu **Kelola Langganan**. Guru mengunggah bukti transfer di halaman **Langganan**; admin meninjau bukti sebelum masa aktif diperpanjang satu bulan.
+
+Pembayaran saat ini menggunakan transfer manual, bukan payment gateway. Bukti disimpan pada filesystem privat aplikasi dan hanya dapat diunduh oleh admin.
+
 ## Contributing
 
 Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
@@ -57,3 +71,4 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+"# soalkita" 

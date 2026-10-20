@@ -14,6 +14,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NilaiTugasController;
 use App\Http\Controllers\SiswaTugasController;
 use App\Http\Controllers\TerbitkanTugasController;
+use App\Http\Controllers\Admin\SubscriptionAdminController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\SubscriptionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -32,6 +35,7 @@ Route::controller(SiswaTugasController::class)->group(function () {
     // 3. Pengerjaan Soal (Route Umum)
     Route::get('/task/{terbitanTugas}/{soalIndex}', 'showTask')->name('siswa.task');
     Route::post('/task/{terbitanTugas}/submit-answer', 'submitAnswer')->name('siswa.submitAnswer');
+    Route::post('/task/{terbitanTugas}/focus-loss', 'reportFocusLoss')->name('siswa.focusLoss');
 
     // 4. Submit Final
     Route::post('/task/{terbitanTugas}/submit-final', 'submitTask')->name('siswa.submit');
@@ -49,6 +53,10 @@ Route::controller(SiswaTugasController::class)->group(function () {
 Route::get('/dashboard', function () {
 
     $user = Auth::user();
+
+    if ($user->isAdmin()) {
+        return redirect()->route('admin.dashboard');
+    }
 
 
     $jumlahKelas = Kelas::where('user_id', $user->id)->count();
@@ -75,6 +83,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
+    Route::post('/subscription/payment', [SubscriptionController::class, 'submitPayment'])->name('subscription.payment');
+});
+
+Route::middleware(['auth', 'subscription'])->group(function () {
 
 
     Route::get('/kelas', [KelasController::class, 'index'])->name('kelas.index');
@@ -112,10 +126,25 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/terbitkantugas/{terbitanId}/jawaban/{jawabanId}', [TerbitkanTugasController::class, 'showJawabanSiswa'])
         ->name('terbitkantugas.showJawabanSiswa');
+    Route::get('/terbitkantugas/{terbitanTugas}/focus-loss-alerts', [TerbitkanTugasController::class, 'focusLossAlerts'])
+        ->name('terbitkantugas.focusLossAlerts');
 
     Route::get('/users', [UsersController::class, 'index'])->name('users.index');
     Route::put('/users/{user}/reset-password', [UsersController::class, 'resetPassword'])->name('users.reset-password');
     Route::delete('/users/{user}', [UsersController::class, 'destroy'])->name('users.destroy');
 });
+
+Route::prefix('admin/subscriptions')->name('admin.subscriptions.')->middleware(['auth', 'admin'])->group(function () {
+    Route::get('/', [SubscriptionAdminController::class, 'index'])->name('index');
+    Route::put('/settings', [SubscriptionAdminController::class, 'updateSettings'])->name('settings');
+    Route::put('/teachers/{teacher}/access', [SubscriptionAdminController::class, 'updateTeacherAccess'])->name('teachers.access');
+    Route::get('/payments/{payment}/proof', [SubscriptionAdminController::class, 'proof'])->name('proof');
+    Route::post('/payments/{payment}/approve', [SubscriptionAdminController::class, 'approve'])->name('approve');
+    Route::post('/payments/{payment}/reject', [SubscriptionAdminController::class, 'reject'])->name('reject');
+});
+
+Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
+    ->middleware(['auth', 'admin'])
+    ->name('admin.dashboard');
 
 require __DIR__ . '/auth.php';

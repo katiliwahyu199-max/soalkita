@@ -63,6 +63,7 @@
                                         class="block mt-1 w-full rounded-md shadow-sm border-gray-300">
                                         <option value="pilihan_ganda">Pilihan Ganda</option>
                                         <option value="uraian">Uraian</option>
+                                        <option value="menjodohkan">Menjodohkan</option>
                                     </select>
                                 </div>
                             @else
@@ -182,6 +183,16 @@
                                 </div>
                             </template>
 
+                            <template x-if="soal.tipe_soal === 'menjodohkan'">
+                                <div class="pl-4 border-l-4 border-purple-200 mb-4">
+                                    <label class="block font-medium text-sm text-gray-700">Kunci Jawaban Menjodohkan</label>
+                                    <textarea name="soal[0][kunci_jawaban_menjodohkan]" x-model="soal.kunci_jawaban_menjodohkan" rows="3"
+                                        class="block mt-1 w-full rounded-md shadow-sm border-gray-300"
+                                        placeholder='{"A":"1","B":"2"}'></textarea>
+                                    <p class="text-xs text-gray-500 mt-1">Format: {"A":"1","B":"2"}</p>
+                                </div>
+                            </template>
+
                         </div>
 
                         
@@ -214,6 +225,7 @@
                             'opsi' => old('soal.0.opsi') ? array_values(old('soal.0.opsi')) : $default_opsi,
                             'kunci_jawaban_pg' => old('soal.0.kunci_jawaban_pg'),
                             'kunci_jawaban_uraian' => old('soal.0.kunci_jawaban_uraian') ?? '',
+                            'kunci_jawaban_menjodohkan' => old('soal.0.kunci_jawaban_menjodohkan') ?? '{"A":"1","B":"2"}',
                         ];
 
                         // Pastikan properti default ada untuk opsi (setelah validasi error)

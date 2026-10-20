@@ -2,6 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    color-scheme: light;
+    --app-ink: #172033;
+    --app-muted: #64748b;
+    --app-primary: #2563eb;
+    --app-primary-dark: #1d4ed8;
+    --app-surface: #ffffff;
+    --app-border: #dbe3ef;
+    --app-background: #f5f7fb;
+  }
+
+  html {
+    background: var(--app-background);
+  }
+
+  body {
+    color: var(--app-ink);
+    background: var(--app-background);
+    text-rendering: optimizeLegibility;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 3px solid rgb(37 99 235 / 24%);
+    outline-offset: 2px;
+  }
+
+  input,
+  select,
+  textarea {
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+}
+
+@layer components {
+  .app-scrollbar {
+    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-width: thin;
+  }
+
+  .app-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .app-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+  }
+
+  .app-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
 /* resources/css/app.css atau file CSS kustom Anda */
 

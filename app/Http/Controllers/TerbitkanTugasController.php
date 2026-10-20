@@ -153,6 +153,29 @@ class TerbitkanTugasController extends Controller
         return view('terbitkantugas.show', compact('terbitan', 'totalSoal'));
     }
 
+    public function focusLossAlerts(string $id)
+    {
+        $terbitan = TerbitanTugas::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $alerts = JawabanSiswa::where('terbitan_tugas_id', $terbitan->id)
+            ->where('focus_loss_count', '>', 0)
+            ->whereNotNull('last_focus_loss_at')
+            ->where('last_focus_loss_at', '>=', now()->subDay())
+            ->orderByDesc('last_focus_loss_at')
+            ->limit(20)
+            ->get(['id', 'student_name', 'focus_loss_count', 'last_focus_loss_at'])
+            ->map(fn (JawabanSiswa $jawaban) => [
+                'id' => $jawaban->id,
+                'student_name' => $jawaban->student_name,
+                'count' => $jawaban->focus_loss_count,
+                'at' => $jawaban->last_focus_loss_at?->toIso8601String(),
+            ]);
+
+        return response()->json(['alerts' => $alerts]);
+    }
+
 
     public function showNilai(string $id)
     {
@@ -262,75 +285,93 @@ class TerbitkanTugasController extends Controller
         $totalSoal = $soals->count();
 
        
-        $dataJawaban = $soals->map(function ($soal, $index) use ($jawabanSiswaJson) {
-            
-           
-            $siswaJawabRAW = $jawabanSiswaJson[(string)$soal->id] ?? null;
+        $formatMatchingPairs = function ($pairs) {
+            if (!is_array($pairs) || empty($pairs)) {
+                return null;
+            }
 
-         
+            $formatted = [];
+            foreach ($pairs as $left => $right) {
+                $formatted[] = $left . ' → ' . $right;
+            }
+
+            return implode(', ', $formatted);
+        };
+
+        $dataJawaban = $soals->map(function ($soal, $index) use ($jawabanSiswaJson, $formatMatchingPairs) {
+            $siswaJawabRAW = $jawabanSiswaJson[(string) $soal->id] ?? null;
             $jawabanBenarRAW = $soal->kunci_jawaban ?? null;
-
             $isBenar = null;
 
-           
             $opsiTampilan = $soal->opsiJawabans->map(function ($opsi) {
                 return [
-                    'id' => (string)$opsi->id, 
+                    'id' => (string) $opsi->id,
                     'teks' => $opsi->opsi_teks,
                     'gambar' => $opsi->opsi_gambar,
                 ];
             })->values();
 
-          
-            $opsiHurufMap = []; 
-            $opsiIdByIndex = []; 
+            if ($soal->tipe_soal_di_tugas === 'menjodohkan') {
+                $jawabanSiswaArray = is_array($siswaJawabRAW) ? $siswaJawabRAW : (is_string($siswaJawabRAW) ? json_decode($siswaJawabRAW, true) ?? [] : []);
+                $jawabanBenarArray = is_array($jawabanBenarRAW) ? $jawabanBenarRAW : (is_string($jawabanBenarRAW) ? json_decode($jawabanBenarRAW, true) ?? [] : []);
+
+                $isBenar = $jawabanSiswaArray === $jawabanBenarArray;
+
+                return [
+                    'nomor' => $index + 1,
+                    'id' => $soal->id,
+                    'soal_teks' => $soal->pertanyaan,
+                    'gambar_soal' => $soal->gambar_soal,
+                    'tipe_soal' => $soal->tipe_soal_di_tugas,
+                    'opsi_tampilan' => [],
+                    'jawaban_siswa_huruf' => $formatMatchingPairs($jawabanSiswaArray),
+                    'jawaban_benar_huruf' => $formatMatchingPairs($jawabanBenarArray),
+                    'jawaban_siswa' => $jawabanSiswaArray,
+                    'jawaban_benar' => $jawabanBenarArray,
+                    'jawaban_siswa_display' => $formatMatchingPairs($jawabanSiswaArray),
+                    'jawaban_benar_display' => $formatMatchingPairs($jawabanBenarArray),
+                    'is_benar' => $isBenar,
+                ];
+            }
+
+            $opsiHurufMap = [];
+            $opsiIdByIndex = [];
             foreach ($opsiTampilan as $i => $opsi) {
                 $opsiHurufMap[$opsi['id']] = chr(65 + $i);
                 $opsiIdByIndex[$i] = $opsi['id'];
             }
 
-          
             $normalizedSiswaID = null;
             $normalizedBenarID = null;
-            
-           
-            if ($siswaJawabRAW !== null) {
-                $rawSiswaString = (string)$siswaJawabRAW;
-                
-               
+
+            if ($siswaJawabRAW !== null && !is_array($siswaJawabRAW)) {
+                $rawSiswaString = (string) $siswaJawabRAW;
+
                 if (isset($opsiHurufMap[$rawSiswaString])) {
-                    $normalizedSiswaID = $rawSiswaString; 
-                } 
-               
-                elseif (is_numeric($rawSiswaString) && isset($opsiIdByIndex[(int)$rawSiswaString])) {
-                    $normalizedSiswaID = $opsiIdByIndex[(int)$rawSiswaString];
+                    $normalizedSiswaID = $rawSiswaString;
+                } elseif (is_numeric($rawSiswaString) && isset($opsiIdByIndex[(int) $rawSiswaString])) {
+                    $normalizedSiswaID = $opsiIdByIndex[(int) $rawSiswaString];
                 }
             }
 
-          
-            if ($jawabanBenarRAW !== null) {
-                $rawBenarString = (string)$jawabanBenarRAW;
-                
-                
+            if ($jawabanBenarRAW !== null && !is_array($jawabanBenarRAW)) {
+                $rawBenarString = (string) $jawabanBenarRAW;
+
                 if (isset($opsiHurufMap[$rawBenarString])) {
-                    $normalizedBenarID = $rawBenarString; 
-                }
-               
-                elseif (is_numeric($rawBenarString) && isset($opsiIdByIndex[(int)$rawBenarString])) {
-                    $normalizedBenarID = $opsiIdByIndex[(int)$rawBenarString];
+                    $normalizedBenarID = $rawBenarString;
+                } elseif (is_numeric($rawBenarString) && isset($opsiIdByIndex[(int) $rawBenarString])) {
+                    $normalizedBenarID = $opsiIdByIndex[(int) $rawBenarString];
                 }
             }
-       
+
             $jawabanSiswaHuruf = $normalizedSiswaID ? $opsiHurufMap[$normalizedSiswaID] : null;
             $jawabanBenarHuruf = $normalizedBenarID ? $opsiHurufMap[$normalizedBenarID] : null;
 
             if ($normalizedSiswaID === null) {
-                $isBenar = null; 
+                $isBenar = null;
             } else {
-               
                 $isBenar = $normalizedSiswaID === $normalizedBenarID;
             }
-
 
             return [
                 'nomor' => $index + 1,
@@ -338,16 +379,11 @@ class TerbitkanTugasController extends Controller
                 'soal_teks' => $soal->pertanyaan,
                 'gambar_soal' => $soal->gambar_soal,
                 'tipe_soal' => $soal->tipe_soal_di_tugas,
-                'opsi_tampilan' => collect($opsiTampilan)->keyBy(fn($o) => $o['id'])->toArray(),
-
-
-               
+                'opsi_tampilan' => collect($opsiTampilan)->keyBy(fn ($o) => $o['id'])->toArray(),
                 'jawaban_siswa_huruf' => $jawabanSiswaHuruf,
                 'jawaban_benar_huruf' => $jawabanBenarHuruf,
-
-                'jawaban_siswa' => $siswaJawabRAW, 
-                'jawaban_benar' => $jawabanBenarRAW, 
-
+                'jawaban_siswa' => $siswaJawabRAW,
+                'jawaban_benar' => $jawabanBenarRAW,
                 'is_benar' => $isBenar,
             ];
         });

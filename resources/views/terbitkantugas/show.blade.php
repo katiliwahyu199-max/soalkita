@@ -47,6 +47,16 @@
             </div>
 
             <div class="bg-white overflow-hidden shadow-md sm:rounded-lg">
+                <div id="focus-loss-alert" class="hidden mx-6 mt-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950 shadow-sm" role="alert">
+                    <div class="flex items-start gap-3">
+                        <span class="text-xl" aria-hidden="true">!</span>
+                        <div class="min-w-0 flex-1">
+                            <p class="font-bold">Peringatan aktivitas siswa</p>
+                            <p id="focus-loss-alert-text" class="mt-1 text-sm"></p>
+                        </div>
+                        <button type="button" id="dismiss-focus-loss-alert" class="text-amber-700 hover:text-amber-950" aria-label="Tutup peringatan">&times;</button>
+                    </div>
+                </div>
                 <div class="p-6 text-gray-900">
                     <h4 class="text-lg font-semibold mb-4">
                         Daftar Siswa yang Mengakses (Total: {{ $terbitan->jawabanSiswa->count() }})
@@ -191,4 +201,48 @@
             </div>
         </div>
     </div>
+
+    <script>
+        (() => {
+            const alertBox = document.getElementById('focus-loss-alert');
+            const alertText = document.getElementById('focus-loss-alert-text');
+            const dismissButton = document.getElementById('dismiss-focus-loss-alert');
+            const alarm = new Audio(@json(asset('audio/alarm.mpeg')));
+            alarm.volume = 0.8;
+            alarm.loop = true;
+            const seen = new Map();
+            let hideTimeout;
+
+            const showAlert = (item) => {
+                const previousCount = seen.get(item.id) || 0;
+                if (item.count <= previousCount) return;
+                seen.set(item.id, item.count);
+                alertText.textContent = `${item.student_name} meninggalkan tab tugas (${item.count} kali).`;
+                alertBox.classList.remove('hidden');
+                alarm.currentTime = 0;
+                alarm.play().catch(() => {});
+                clearTimeout(hideTimeout);
+                hideTimeout = setTimeout(() => {
+                    alertBox.classList.add('hidden');
+                    alarm.pause();
+                    alarm.currentTime = 0;
+                }, 10000);
+            };
+
+            const pollAlerts = () => fetch(@json(route('terbitkantugas.focusLossAlerts', $terbitan->id)), {
+                headers: { Accept: 'application/json' }
+            }).then(response => response.json()).then(data => {
+                (data.alerts || []).forEach(showAlert);
+            }).catch(() => {});
+
+            dismissButton.addEventListener('click', () => {
+                alertBox.classList.add('hidden');
+                alarm.pause();
+                alarm.currentTime = 0;
+            });
+
+            pollAlerts();
+            setInterval(pollAlerts, 5000);
+        })();
+    </script>
 </x-app-layout>

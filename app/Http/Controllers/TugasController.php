@@ -48,7 +48,7 @@ class TugasController extends Controller
             'soal.*.pertanyaan' => 'required|string',
             'soal.*.keterangan_soal' => 'nullable|string',
             'soal.*.gambar_soal' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-            'soal.*.tipe_soal' => 'required|in:pilihan_ganda,uraian',
+            'soal.*.tipe_soal' => 'required|in:pilihan_ganda,uraian,menjodohkan',
 
           
             'soal.*.opsi' => 'nullable|array',
@@ -115,6 +115,8 @@ class TugasController extends Controller
                     $kunci_jawaban_final = $dataSoal['kunci_jawaban_pg'] ?? null;
                 } elseif ($tipe_soal == 'uraian') {
                     $kunci_jawaban_final = $dataSoal['kunci_jawaban_uraian'] ?? null;
+                } elseif ($tipe_soal == 'menjodohkan') {
+                    $kunci_jawaban_final = $dataSoal['kunci_jawaban_menjodohkan'] ?? null;
                 }
 
                
@@ -158,7 +160,7 @@ class TugasController extends Controller
             'soal.0.pertanyaan' => 'required|string',
             'soal.0.keterangan_soal' => 'nullable|string',
             'soal.0.gambar_soal' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-            'soal.0.tipe_soal' => 'required|in:pilihan_ganda,uraian',
+            'soal.0.tipe_soal' => 'required|in:pilihan_ganda,uraian,menjodohkan',
 
           
             'soal.0.opsi' => 'nullable|array',
@@ -222,6 +224,8 @@ class TugasController extends Controller
                 $kunci_jawaban_final = $dataSoal['kunci_jawaban_pg'] ?? null;
             } elseif ($tipe_soal == 'uraian') {
                 $kunci_jawaban_final = $dataSoal['kunci_jawaban_uraian'] ?? null;
+            } elseif ($tipe_soal == 'menjodohkan') {
+                $kunci_jawaban_final = $dataSoal['kunci_jawaban_menjodohkan'] ?? null;
             }
 
          

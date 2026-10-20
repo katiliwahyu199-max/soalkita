@@ -54,17 +54,19 @@ class Soal extends Model
 
               
                 if ($tipe_soal == 'pilihan_ganda') {
-                    
-                  
                     if (is_null($kunci_jawaban) || $kunci_jawaban === '') {
-                        return 'N/A'; // Tidak ada kunci jawaban
+                        return 'N/A';
                     }
 
-                   
                     $correctIndex = (int) $kunci_jawaban;
-
-                 
                     return chr(65 + $correctIndex);
+                }
+
+                if ($tipe_soal == 'menjodohkan') {
+                    $decoded = json_decode((string) $kunci_jawaban, true);
+                    if (is_array($decoded)) {
+                        return json_encode($decoded);
+                    }
                 }
 
                 return $kunci_jawaban; 

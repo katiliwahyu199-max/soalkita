@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('pertanyaan');
             
           
-            $table->enum('tipe_soal_di_tugas', ['pilihan_ganda', 'uraian']); 
+            $table->enum('tipe_soal_di_tugas', ['pilihan_ganda', 'uraian', 'menjodohkan']); 
             
           
             $table->text('kunci_jawaban')->nullable(); 

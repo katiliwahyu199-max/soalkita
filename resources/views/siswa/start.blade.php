@@ -9,13 +9,13 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans antialiased text-gray-800 bg-gray-100 min-h-screen flex items-center justify-center">
+<body class="font-sans antialiased text-slate-800 bg-slate-100 min-h-screen flex items-center justify-center p-3 sm:p-6">
 
-    <div class="w-full max-w-xl mx-auto p-6 md:p-10 bg-white rounded-xl shadow-2xl">
-        <h1 class="text-3xl font-bold text-blue-600 mb-2">Mulai Tugas</h1>
-        <p class="text-xl text-gray-700 mb-6 font-semibold">{{ $terbitanTugas->tugas->nama_tugas }}</p>
+    <div class="w-full max-w-xl mx-auto p-5 sm:p-8 md:p-10 bg-white rounded-2xl shadow-xl border border-slate-200">
+        <h1 class="text-2xl sm:text-3xl font-bold text-blue-700 mb-2">Mulai Tugas</h1>
+        <p class="text-lg sm:text-xl text-slate-700 mb-6 font-semibold break-words">{{ $terbitanTugas->tugas->nama_tugas }}</p>
 
-        <div class="mb-8 p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800">
+        <div class="mb-8 p-4 bg-blue-50 border border-blue-100 border-l-4 border-l-blue-500 rounded-r-lg text-blue-900">
             <p><strong>Kelas:</strong> {{ $terbitanTugas->kelas->nama_kelas }}</p>
             <p><strong>Durasi Pengerjaan:</strong>
                 {{ $terbitanTugas->durasi_menit ? $terbitanTugas->durasi_menit . ' Menit' : 'Tidak Dibatasi' }}
@@ -30,7 +30,7 @@
                     class="block text-sm font-medium text-gray-700 mb-2">Masukkan Nama Lengkap Anda</label>
                 <input type="text" name="student_name" id="student_name" required
                     placeholder="Cth: Wahyu Katili (Wajib diisi)"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-green-500 focus:ring-green-500 shadow-sm">
+                    class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 shadow-sm">
                 @error('student_name')
                     <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                 @enderror
@@ -38,7 +38,7 @@
             </div>
             
             <button type="submit"
-                class="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold text-lg hover:bg-green-700 transition-colors">
+                class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold text-base sm:text-lg hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">
                 Selanjutnya: Mulai Soal
                 </button>
             </form>
