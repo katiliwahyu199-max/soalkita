@@ -15,16 +15,12 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans text-gray-900 antialiased relative min-h-screen flex flex-col justify-center items-center py-6">
+<body class="font-sans text-gray-900 antialiased relative min-h-screen flex flex-col justify-center items-center py-6 bg-gradient-to-br from-sky-100 via-blue-50 to-indigo-100">
 
-    <div class="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
-        style="background-image: url('https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=1920&auto=format&fit=crop'); filter: brightness(35%) contrast(105%);">
-    </div>
+    <div class="fixed -top-20 -left-20 w-80 h-80 bg-blue-400/25 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+    <div class="fixed -bottom-20 -right-20 w-80 h-80 bg-amber-300/30 rounded-full blur-3xl -z-10 pointer-events-none"></div>
 
-    <div class="fixed -top-20 -left-20 w-80 h-80 bg-blue-600/30 rounded-full blur-3xl -z-10 pointer-events-none"></div>
-    <div class="fixed -bottom-20 -right-20 w-80 h-80 bg-yellow-500/20 rounded-full blur-3xl -z-10 pointer-events-none"></div>
-
-    <div class="w-full sm:max-w-md mt-4 px-6 py-8 bg-white/95 backdrop-blur-md shadow-2xl overflow-hidden sm:rounded-2xl border border-white/50 z-10">
+    <div class="w-full sm:max-w-md mt-4 px-6 py-8 bg-sky-50/90 backdrop-blur-md shadow-2xl overflow-hidden sm:rounded-2xl border border-white/70 z-10">
         {{ $slot }}
     </div>
 

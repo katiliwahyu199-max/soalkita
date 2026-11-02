@@ -195,8 +195,13 @@ class SiswaTugasController extends Controller
             return response()->json(['message' => 'Data pengerjaan tidak ditemukan.'], 404);
         }
 
-        $jawabanSiswa->increment('focus_loss_count');
-        $jawabanSiswa->forceFill(['last_focus_loss_at' => now()])->save();
+        if ($jawabanSiswa->status_penilaian !== 'belum_dinilai') {
+            return response()->json(['ok' => true]);
+        }
+
+        JawabanSiswa::whereKey($jawabanSiswa->id)
+            ->where('status_penilaian', 'belum_dinilai')
+            ->increment('focus_loss_count', 1, ['last_focus_loss_at' => now()]);
 
         return response()->json(['ok' => true]);
     }

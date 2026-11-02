@@ -211,12 +211,14 @@
             alarm.volume = 0.8;
             alarm.loop = true;
             const seen = new Map();
+            let activeAlertId = null;
             let hideTimeout;
 
             const showAlert = (item) => {
                 const previousCount = seen.get(item.id) || 0;
                 if (item.count <= previousCount) return;
                 seen.set(item.id, item.count);
+                activeAlertId = item.id;
                 alertText.textContent = `${item.student_name} meninggalkan tab tugas (${item.count} kali).`;
                 alertBox.classList.remove('hidden');
                 alarm.currentTime = 0;
@@ -232,10 +234,20 @@
             const pollAlerts = () => fetch(@json(route('terbitkantugas.focusLossAlerts', $terbitan->id)), {
                 headers: { Accept: 'application/json' }
             }).then(response => response.json()).then(data => {
-                (data.alerts || []).forEach(showAlert);
+                const alerts = data.alerts || [];
+                alerts.forEach(showAlert);
+
+                if (activeAlertId && !alerts.some(item => item.id === activeAlertId)) {
+                    activeAlertId = null;
+                    clearTimeout(hideTimeout);
+                    alertBox.classList.add('hidden');
+                    alarm.pause();
+                    alarm.currentTime = 0;
+                }
             }).catch(() => {});
 
             dismissButton.addEventListener('click', () => {
+                activeAlertId = null;
                 alertBox.classList.add('hidden');
                 alarm.pause();
                 alarm.currentTime = 0;

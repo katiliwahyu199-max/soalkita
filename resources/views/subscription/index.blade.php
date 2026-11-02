@@ -8,6 +8,9 @@
             ->filter(fn ($date) => $date?->isFuture())
             ->sortByDesc(fn ($date) => $date->timestamp)
             ->first();
+        $adminEmail = config('services.admin.email');
+        $contactSubject = rawurlencode('Pertanyaan pembayaran langganan SoalKita');
+        $contactBody = rawurlencode("Halo Admin, saya ingin bertanya tentang pembayaran langganan.\n\nNama: {$user->name}\nEmail: {$user->email}");
     @endphp
 
     <div class="mx-auto max-w-4xl space-y-6">
@@ -40,6 +43,13 @@
                 <h2 class="text-lg font-bold text-slate-900">Paket bulanan</h2>
                 <p class="mt-2 text-3xl font-bold text-slate-900">Rp{{ number_format($settings->monthly_price, 0, ',', '.') }}<span class="text-base font-medium text-slate-500"> / bulan</span></p>
                 <div class="mt-4 whitespace-pre-line text-sm leading-6 text-slate-600">{{ $settings->payment_instructions ?: 'Petunjuk pembayaran belum tersedia. Hubungi admin sebelum melakukan transfer.' }}</div>
+                @if (filled($adminEmail))
+                    <a href="mailto:{{ $adminEmail }}?subject={{ $contactSubject }}&amp;body={{ $contactBody }}" class="mt-4 inline-flex items-center justify-center rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Hubungi Admin
+                    </a>
+                @else
+                    <p class="mt-3 text-sm text-amber-700">Kontak admin belum dikonfigurasi.</p>
+                @endif
             </div>
 
             <div class="border-l border-slate-200 pl-0 md:pl-8">

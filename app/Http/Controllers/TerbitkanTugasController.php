@@ -160,6 +160,7 @@ class TerbitkanTugasController extends Controller
             ->firstOrFail();
 
         $alerts = JawabanSiswa::where('terbitan_tugas_id', $terbitan->id)
+            ->where('status_penilaian', 'belum_dinilai')
             ->where('focus_loss_count', '>', 0)
             ->whereNotNull('last_focus_loss_at')
             ->where('last_focus_loss_at', '>=', now()->subDay())

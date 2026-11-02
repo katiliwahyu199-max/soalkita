@@ -41,20 +41,48 @@
             </div>
         </div>
 
-        <form action="{{ route('siswa.submit', $terbitanTugas->id) }}" method="POST">
+        <form id="submit-task-form" action="{{ route('siswa.submit', $terbitanTugas->id) }}" method="POST">
             @csrf
             
-            <button type="submit" 
+            <button type="button" id="open-submit-confirmation"
                     class="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold text-base sm:text-lg hover:bg-blue-700 active:bg-blue-800 transition-colors mb-3 shadow-sm"
-                    onclick="return confirm('APAKAH ANDA YAKIN INGIN MENGUMPULKAN? Anda tidak bisa mengedit lagi setelah ini.');">
+                    aria-haspopup="dialog" aria-controls="submit-confirmation">
                 YA, Kumpulkan Jawaban Sekarang
             </button>
+
+            <dialog id="submit-confirmation" aria-labelledby="submit-confirmation-title" class="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl border-0 bg-transparent p-0 shadow-2xl backdrop:bg-slate-950/60">
+                <div class="rounded-2xl bg-white p-6 text-left">
+                    <h2 id="submit-confirmation-title" class="text-xl font-bold text-gray-900">Kirim jawaban sekarang?</h2>
+                    <p class="mt-3 text-gray-600">
+                        Setelah dikumpulkan, jawaban tidak dapat diubah lagi. Pastikan Anda sudah memeriksa semua jawaban.
+                    </p>
+                    <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                        <button type="button" id="cancel-submit-confirmation"
+                                class="rounded-lg border border-gray-300 px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50">
+                            Periksa Kembali
+                        </button>
+                        <button type="submit" id="confirm-submit-task"
+                                class="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700">
+                            Ya, Kirim Jawaban
+                        </button>
+                    </div>
+                </div>
+            </dialog>
         </form>
         
         <a href="{{ route('siswa.task', [$terbitanTugas->id, 1]) }}" class="text-sm text-indigo-600 hover:text-indigo-800">
             &larr; Kembali ke Soal (Cek Ulang)
         </a>
     </div>
-    
+
+    <script>
+        const submitDialog = document.getElementById('submit-confirmation');
+        const openSubmitConfirmation = document.getElementById('open-submit-confirmation');
+        const cancelSubmitConfirmation = document.getElementById('cancel-submit-confirmation');
+
+        openSubmitConfirmation.addEventListener('click', () => submitDialog.showModal());
+        cancelSubmitConfirmation.addEventListener('click', () => submitDialog.close());
+        submitDialog.addEventListener('cancel', (event) => event.preventDefault());
+    </script>
 </body>
 </html>
